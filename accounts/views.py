@@ -52,7 +52,7 @@ def registerVendor(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = User.objects.create_user(first_name = first_name, last_name = last_name, username = username, email = email, password = password)
-            user.role = User.RESTAURANT
+            user.role = User.VENDOR
             user.save()
             vendor = vendorForm.save(commit=False)
             vendor.user = user
