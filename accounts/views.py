@@ -101,7 +101,9 @@ def login(request):
 
 
 def logout(request):
-    return
+    auth.logout(request)
+    messages.info(request, 'You are logged out.')
+    return redirect('login')
 
 
 def dashboard(request):
