@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from accounts.models import User, UserProfile
-from accounts.utils import detectUser, send_password_reset_email, send_verification_email
+from accounts.utils import detectUser, send_verification_email
 from vendor.forms import VendorForm
 from . forms import UserForm
 from django.contrib import messages, auth
@@ -52,7 +52,10 @@ def registerUser(request):
             user.save()
 
             # Send verification email
-            send_verification_email(request, user)
+            mail_subject ='Please activate your accunt'
+            email_template = 'accounts/emails/account_verification_email.html'
+            send_verification_email(request, user, mail_subject, email_template)
+
             messages.success(request, 'Your account has been registered successfully')
             return redirect('registerUser')
         else:
@@ -90,8 +93,10 @@ def registerVendor(request):
             vendor.userProfile = user_profile
             vendor.save()
 
-            # Activate the user 
-            send_verification_email(request, user)
+            # Send verification email
+            mail_subject ='Please activate your accunt'
+            email_template = 'accounts/emails/account_verification_email.html'
+            send_verification_email(request, user, mail_subject, email_template)
             
             messages.success(request, 'Your account has been registered successfully! Please wait for the approval.')
             return redirect('registerVendor')
@@ -182,7 +187,9 @@ def forgot_password(request):
             user = User.objects.get(email__exact=email)
 
             # send reset password email
-            send_password_reset_email(request, user)
+            mail_subject ='Reset your password'
+            email_template = 'accounts/emails/reset_password_email.html'
+            send_verification_email(request, user, mail_subject, email_template)
 
             messages.success(request, 'Password reset link has been sent to your email address')
 
