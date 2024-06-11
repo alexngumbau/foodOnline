@@ -176,11 +176,7 @@ def custDashboard(request):
 @user_passes_test(check_role_vendor)
 @login_required(login_url = 'login')
 def vendorDashboard(request):
-    vendor = Vendor.objects.get(user= request.user)
-    context =  {
-        'vendor': vendor,
-    }
-    return render(request, 'accounts/vendorDashboard.html', context)
+    return render(request, 'accounts/vendorDashboard.html')
 
 
 def forgot_password(request):
