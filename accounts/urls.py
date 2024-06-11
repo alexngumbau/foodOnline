@@ -18,5 +18,7 @@ urlpatterns = [
 
     path('vendor/', include('vendor.urls'))
 
+    
+
 
 ]
