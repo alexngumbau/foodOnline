@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
+from menu.models import Category
 from vendor.forms import VendorForm
 from vendor.models import Vendor
 
@@ -42,5 +43,10 @@ def vprofile(request):
 
 
 def menu_builder(request):
-    return render(request, 'vendor/menu_builder.html')
+    vendor = Vendor.objects.get(user=request.user)
+    categories = Category.objects.filter(vendor=vendor)
+    context = {
+        'categories': categories
+    }
+    return render(request, 'vendor/menu_builder.html', context)
 
