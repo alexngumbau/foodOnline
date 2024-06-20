@@ -6,6 +6,9 @@ urlpatterns = [
     path('', AccountViews.vendorDashboard, name='vendor'),
     path('profile/', views.vprofile, name='vprofile'),
     path('menu-builder/', views.menu_builder, name='menu_builder'),
-    path('menu-builder/category/<int:pk>/', views.foodItems_by_category, name='foodItems_by_category')
+    path('menu-builder/category/<int:pk>/', views.foodItems_by_category, name='foodItems_by_category'),
+
+    # Category CRUD
+    path('menu-builder/category/add/', views.add_category, name='add_category'),
 
 ]
