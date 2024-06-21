@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
-from menu.forms import CategoryForm
+from menu.forms import CategoryForm, FoodItemForm
 from menu.models import Category, FoodItem
 from vendor.forms import VendorForm
 from vendor.models import Vendor
@@ -123,3 +123,27 @@ def delete_category(request, pk=None):
     category.delete()
     messages.success(request, 'Category has been deleted successfully!')
     return redirect('menu_builder')
+
+
+
+# CRUD FOOD ITEM
+
+def add_food(request):
+    if request.method == 'POST':
+        form = FoodItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            foodTitle = form.cleaned_data['food_title']
+            food = form.save(commit=False)
+            food.vendor = get_vendor(request)
+            food.slug= slugify(foodTitle)
+            form.save()
+            messages.success(request, 'Food Item added successfully!')
+            return redirect('foodItems_by_category', food.category.id)
+        else:
+            print(form.errors)
+    else:
+        form = FoodItemForm()
+    context = {
+        'form':form,
+    }
+    return render(request, 'vendor/add_food.html', context)
