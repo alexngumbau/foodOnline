@@ -174,6 +174,9 @@ def edit_food(request, pk=None):
             print(form.errors)
     else:
         form = FoodItemForm(instance=food)
+        #  Modify the query set to only pick the request of the loggedin vendor
+        form.fields['category'].queryset = Category.objects.filter(vendor=get_vendor(request))
+
 
     context =  {
         'form' : form,
