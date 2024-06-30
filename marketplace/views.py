@@ -93,3 +93,7 @@ def decrease_cart(request, food_id):
     else:
         return JsonResponse({'status':'login_required', 'message':'Please login to continue'})
     
+
+def cart (request):
+    print('Test')
+    return render(request, 'marketplace/cart.html')
