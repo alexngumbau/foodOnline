@@ -137,4 +137,31 @@ $(document).ready(function(){
         })
     })
 
+
+    // Delete the cart item
+    $('.delete_cart').on('click', function(e){
+        e.preventDefault();
+
+
+        food_id = $(this).attr('data-id');
+        url = $(this).attr('data-url');
+        
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function(response){
+                console.log(response);
+                if(response.status== 'Failed' ) {
+                    swal(response.message, '', 'error')
+                } else {
+                    $('#cart_counter').html(response.cart_counter['cart_count']);
+                    swal(response.status, response.message, "Success")
+                }
+                
+                
+            }
+        })
+    })
+
 });
