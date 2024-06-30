@@ -143,7 +143,7 @@ $(document).ready(function(){
         e.preventDefault();
 
 
-        food_id = $(this).attr('data-id');
+        cart_id = $(this).attr('data-id');
         url = $(this).attr('data-url');
         
 
@@ -157,11 +157,21 @@ $(document).ready(function(){
                 } else {
                     $('#cart_counter').html(response.cart_counter['cart_count']);
                     swal(response.status, response.message, "Success")
+                    removeCartItem(0, cart_id)
                 }
                 
                 
             }
         })
     })
+
+
+    //  Delete the cart element if the qty us 0
+    function removeCartItem(cartItemQty, cart_id) {
+        if (cartItemQty <= 0) {
+            // remove the cart item element
+            document.getElementById("cart-item-"+cart_id).remove()
+        }
+    }
 
 });
