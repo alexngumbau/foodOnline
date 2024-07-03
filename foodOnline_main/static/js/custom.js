@@ -215,7 +215,7 @@ $(document).ready(function(){
             document.getElementById("empty-cart").style.display = "block";
         }
     }
-    cart_amount
+    
     // apply cart amounts
     function applyCartAmounts(subtotal, tax, grandtotal) {
         if(window.location.pathname == '/cart/') {
