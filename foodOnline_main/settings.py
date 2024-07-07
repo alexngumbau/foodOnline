@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'vendor',
     'menu',
     'marketplace',
+    'django.contrib.gis',
 ]
 
 MIDDLEWARE = [
@@ -167,4 +168,4 @@ GOOGLE_API_KEY = config('GOOGLE_API_KEY')
 
 # GDAL
 # Add the GDAL library path to the system path
-GDAL_LIBRARY_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'env', 'lib', 'python3.10', 'site-packages', 'osgeo', 'gdal.py')
+# GDAL_LIBRARY_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'env', 'lib', 'python3.10', 'site-packages', 'osgeo', 'gdal.py')
