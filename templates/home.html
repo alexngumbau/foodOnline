@@ -140,6 +140,13 @@
 										{% if vendor.userProfile.city and vendor.userProfile.state and vendor.userProfile.pin_code %}
 										<span>{{ vendor.userProfile.city }}, {{ vendor.userProfile.state }}, {{ vendor.userProfile.pin_code }} </span>
 										{% endif %}
+
+										{% if vendor.kms %}
+											<br>
+											<span>
+												<small><b>{{vendor.kms}} km </b>away</small>
+											</span>
+										{% endif %}
 									</div>
 									
 								</div>
