@@ -4,8 +4,8 @@ from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from menu.forms import CategoryForm, FoodItemForm
 from menu.models import Category, FoodItem
-from vendor.forms import VendorForm
-from vendor.models import Vendor
+from vendor.forms import OpeningHourForm, VendorForm
+from vendor.models import OpeningHour, Vendor
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -196,4 +196,10 @@ def delete_food(request, pk=None):
 
 
 def opening_hours(request):
-    return render(request, 'vendor/opening_hours.html')
+    opening_hours = OpeningHour.objects.filter(vendor = get_vendor(request))
+    form = OpeningHourForm()
+    context = {
+        'form' : form,
+        'opening_hours': opening_hours,
+    }
+    return render(request, 'vendor/opening_hours.html', context)
