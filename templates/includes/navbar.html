@@ -15,7 +15,6 @@
                             </figure>
                         </div>
                         
-                        
                         <div class="main-location ml-5">
                             <ul>
                                 <li class="location-has-children choose-location">
@@ -74,6 +73,8 @@ function getLocation() {
 function showPosition(position) {
     var lat = position.coords.latitude
     var lng = position.coords.longitude
+    
+    console.log(lat + ', '+ lng)
 
     // hit AJAX request to googlemaps api endpoint and get the location data using lat and lng
     var GOOGLE_API_KEY = "{{GOOGLE_API_KEY}}"
