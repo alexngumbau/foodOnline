@@ -9,7 +9,7 @@ class VendorAdmin(admin.ModelAdmin):
     list_editable = ('is_approved',)
 
 class OpeningHourAdmin(admin.ModelAdmin):
-    list_display = ('vendor', 'day', 'from_hour', 'to_hour')
+    list_display = ('vendor', 'day', 'from_hour', 'to_hour', 'is_closed')
 
 admin.site.register(Vendor, VendorAdmin)
 admin.site.register(OpeningHour, OpeningHourAdmin)
