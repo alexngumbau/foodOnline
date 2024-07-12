@@ -1,5 +1,5 @@
-from datetime import date
-from django.http import HttpResponse, JsonResponse
+from datetime import date, datetime
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from marketplace.context_processors import get_cart_amounts, get_cart_counter
@@ -14,6 +14,7 @@ from django.db.models import Q;
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
+import pytz
 
 # Create your views here.
 
@@ -43,7 +44,23 @@ def vendor_detail(request, vendor_slug):
     today = today_date.isoweekday()
     current_opening_hours = OpeningHour.objects.filter(vendor = vendor, day = today)
 
-    print("CURRENT OPENING HOURS", current_opening_hours)
+    # Get the current time in Nairobi, Kenya
+    nairobi_tz = pytz.timezone('Africa/Nairobi')
+    now = datetime.now(nairobi_tz)
+    current_time = now.strftime("%H:%M:%S")
+    
+    is_open = None
+    for i in current_opening_hours:
+        start = str(datetime.strptime(i.from_hour, "%I:%M %p").time())
+        end = str(datetime.strptime(i.to_hour, "%I:%M %p").time())
+
+        if current_time > start and current_time < end:
+            is_open = True
+            break
+        else:
+            is_open = False
+    print("Is The Restaurant Open: ", is_open)
+
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
     else:
@@ -53,7 +70,8 @@ def vendor_detail(request, vendor_slug):
         'categories': categories,
         'cart_items': cart_items,
         'opening_hours': opening_hours,
-        'current_opening_hours': current_opening_hours
+        'current_opening_hours': current_opening_hours,
+        'is_open': is_open,
     }
     return render(request,'marketplace/vendor_detail.html', context)
 
