@@ -237,7 +237,8 @@ def add_opening_hours(request):
                 return JsonResponse(response)
             except IntegrityError as e:
                 response = {
-                    'status': 'failed'
+                    'status': 'failed',
+                    'message': from_hour +'-' +to_hour+ ' already exists for this day!'
                 }
                 return JsonResponse(response)
         else:
