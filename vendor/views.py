@@ -207,4 +207,5 @@ def opening_hours(request):
 
 
 def add_opening_hours(request):
+    # Handle the data and save them inside the database
     return HttpResponse('Add opening Hours')
