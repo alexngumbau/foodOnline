@@ -28,7 +28,7 @@ class Vendor(models.Model):
         today = today_date.isoweekday()
         current_opening_hours = OpeningHour.objects.filter(vendor = self, day = today)
 
-        # Get the current time in Nairobi, Kenya
+        # Get the current time kin Nairobi, Kenya
         nairobi_tz = pytz.timezone('Africa/Nairobi')
         now = datetime.now(nairobi_tz)
         current_time = now.strftime("%H:%M:%S")
