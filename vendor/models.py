@@ -28,6 +28,9 @@ class Vendor(models.Model):
         today = today_date.isoweekday()
         current_opening_hours = OpeningHour.objects.filter(vendor = self, day = today)
 
+        if any(oh.is_closed for oh in current_opening_hours):
+            return False;
+    
         # Get the current time kin Nairobi, Kenya
         nairobi_tz = pytz.timezone('Africa/Nairobi')
         now = datetime.now(nairobi_tz)
