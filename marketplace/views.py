@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from marketplace.context_processors import get_cart_amounts, get_cart_counter
 from marketplace.models import Cart
 from menu.models import Category, FoodItem
+from orders.forms import OrderForm
 from vendor.models import OpeningHour, Vendor
 from django.db.models import Prefetch
 
@@ -168,4 +169,8 @@ def search(request):
 
 
 def checkout(request):
-    return render(request,'marketplace/checkout.html' )
+    form = OrderForm()
+    context = {
+        'form': form,
+    }
+    return render(request,'marketplace/checkout.html' , context)
