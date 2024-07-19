@@ -93,7 +93,6 @@
 
                                     <div id="menu-item-list-6272" class="menu-itam-list">
                                         <ul>
-                                            {% if cart_items %}
                                                 {% for item in cart_items %}
                                                 <li id="cart-item-{{item.id}}">
                                                     <div class="image-holder"> <img src="{{item.fooditem.image.url}}" alt=""></div>
@@ -111,11 +110,6 @@
                                                     </div>
                                                 </li>
                                                 {% endfor %}
-                                            {% else %}
-                                                <div class="text-center p-5">
-                                                    <h3>Cart is empty</h3>
-                                                </div>
-                                            {% endif %}
                                         </ul>
                                     </div>
 
@@ -147,6 +141,18 @@
                                                 </span>
                                             </li>
 
+                                            <!-- Select payment method -->
+                                            <h5>SELECT PAYMENT METHOD</h5>
+                                            <div class="payment-method">
+                                                <label>
+                                                    <input type="radio" name="payment_method" value="PayPal">
+                                                    <img src="{% static 'images/PayPal.png' %}" alt="PayPal" width="100">
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="payment_method" value="RazorPay">
+                                                    <img src="{% static 'images/M-PESA_LOGO-01.svg.png' %}" alt="RazorPay" width="100">
+                                                </label>
+                                            </div>
                                             <button type="submit" class="btn btn-danger w-100 p-2 mt-3">PLACE ORDER</button>
                                         </ul>
 
