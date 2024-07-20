@@ -5,6 +5,7 @@ from marketplace.context_processors import get_cart_amounts
 from marketplace.models import Cart
 from orders.forms import OrderForm
 from orders.models import Order
+from orders.utils import generate_order_number
 
 # Create your views here.
 
@@ -37,7 +38,8 @@ def place_order(request):
             order.tax_data = json.dumps(tax_data)
             order.total_tax = total_tax
             order.payment_method = request.POST['payment_method']
-            order.order_number = '123'
+            order.save() # Order id/pk is generated
+            order.order_number = generate_order_number(order.id)
             order.save()
             return redirect('place_order')
 
