@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from marketplace.context_processors import get_cart_amounts
 from marketplace.models import Cart
 from orders.forms import OrderForm
-from orders.models import Order
+from orders.models import Order, Payment
 from orders.utils import generate_order_number
 
 # Create your views here.
@@ -55,4 +55,36 @@ def place_order(request):
 
 
 def payments(request):
+    # Check if the request is ajax or not
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
+        #  store the payment details in the payment model
+        order_number = request.POST.get('order_number')
+        transaction_id = request.POST.get('transaction_id')
+        payment_method = request.POST.get('payment_method')
+        status = request.POST.get('status')
+
+        order = Order.objects.get(user= request.user, order_number= order_number)
+        payment = Payment(
+            user = request.user,
+            transaction_id = transaction_id,
+            payment_method = payment_method,
+            amount = order.total,
+            status = status
+        )
+        payment.save()
+
+        # update the order model
+        order.payment = payment
+        order.is_ordered = True
+        order.save()
+    
+        #  move the cart items to ordered food model
+
+        #  send order confirmation email to the customer
+
+        #  send the order received email to the vendor
+
+        # clear the cart if the payment is success
+
+        # return back to ajax with the status success or failure
     return HttpResponse('Payments View')
