@@ -77,6 +77,7 @@ TEMPLATES = [
                 'marketplace.context_processors.get_cart_counter',
                 'marketplace.context_processors.get_cart_amounts',
                 'accounts.context_processors.get_user_profile',
+                'accounts.context_processors.get_paypal_client_id',
             ],
         },
     },
@@ -169,3 +170,8 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 # GOOGLE API
 GOOGLE_API_KEY = config('GOOGLE_API_KEY')
 
+# PAYPAL INTEGRATIONS
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+
+# SECURE CROSS ORIGIN CONFIGURATIONS
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
