@@ -72,7 +72,9 @@
                                                 </span>
                                             </li>
 
-                                            <a href="{% url 'checkout' %}" class="btn btn-danger w-100 p-2 mt-3">PROCEED TO CHECKOUT</a>
+                                            <!-- PayPal Checkout button -->
+                                            <div id="paypal-button-container"></div>  
+                                             
                                         </ul>
                                     </div>
 
@@ -88,5 +90,39 @@
     </div>
 </div>
 <!-- Main Section End -->
+ 
+
+<script>
+    // Extract grand total from the server-side template
+    var grandTotal = "{{ grand_total }}"
+    // Render the PayPal button into #paypal-button-container
+    paypal.Buttons({
+        createOrder: function(data, actions) {
+            // create a paypal order with the specified grand total
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value : grandTotal,
+                    },
+                }],
+            });
+        },
+
+        onApprove: function (data, actions) {
+            // Capture the paypal order when the user approves the transaction
+            return actions.order.capture().then(function (orderData) {
+                //  Log the order data to the console
+                console.log("Order data: ", orderData);
+
+                // Extract the transaction id
+                var transactionId = orderData.purchase_units[0].payments.captures[0].id;
+                console.log("Transaction ID: ", transactionId);
+
+                // Display a success message or perform additional actions
+                // Example: alert ('Transaction completed by ' + orderData.payer.name.given_name);
+            });
+        }
+    }).render('#paypal-button-container');
+</script>
 
 {% endblock %}
