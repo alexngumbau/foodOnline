@@ -93,36 +93,76 @@
  
 
 <script>
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     // Extract grand total from the server-side template
-    var grandTotal = "{{ grand_total }}"
+    var grandTotal = "{{ grand_total }}";
+    var url = "{% url 'payments' %}"
+    var order_number = "{{ order.order_number }}"
+    const csrftoken = getCookie('csrftoken');
+    console.log('csrftoken: ' , csrftoken);
     // Render the PayPal button into #paypal-button-container
     paypal.Buttons({
-        createOrder: function(data, actions) {
-            // create a paypal order with the specified grand total
+        createOrder: function (data, actions) {
+            // Create a PayPal order with the specified grand total
             return actions.order.create({
                 purchase_units: [{
                     amount: {
-                        value : grandTotal,
+                        value: grandTotal,
                     },
                 }],
             });
         },
-
         onApprove: function (data, actions) {
-            // Capture the paypal order when the user approves the transaction
+            // Capture the PayPal order when the user approves the transaction
             return actions.order.capture().then(function (orderData) {
-                //  Log the order data to the console
-                console.log("Order data: ", orderData);
-
-                // Extract the transaction id
-                var transactionId = orderData.purchase_units[0].payments.captures[0].id;
-                console.log("Transaction ID: ", transactionId);
-
+                // Log the order data to the console
+                console.log("Order Data:", orderData);
+ 
+                // Extract the transaction ID
+                var transaction_id = orderData.purchase_units[0].payments.captures[0].id;
+                var status = orderData.status
+                var payment_method = 'PayPal'
+                sendTransaction(transaction_id, payment_method, status);
+                
                 // Display a success message or perform additional actions
-                // Example: alert ('Transaction completed by ' + orderData.payer.name.given_name);
+                // Example: alert('Transaction completed by ' + orderData.payer.name.given_name);
             });
         }
     }).render('#paypal-button-container');
+
+    // Send the data to payments view to store in the database
+    function sendTransaction(transaction_id, payment_method, status){
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data : {
+                'order_number': order_number,
+                'transaction_id': transaction_id,
+                'payment_method': payment_method,
+                'status': status,
+                'csrfmiddlewaretoken': csrftoken,
+            },
+            success: function(response) {
+                console.log('response ---> ', response);
+            }
+        })
+    }
 </script>
 
 {% endblock %}
