@@ -139,6 +139,7 @@
     // Extract grand total from the server-side template
     var grandTotal = "{{ grand_total }}";
     var url = "{% url 'payments' %}"
+    var order_complete = "{% url 'order_complete' %}"
     var order_number = "{{ order.order_number }}"
     const csrftoken = getCookie('csrftoken');
     console.log('csrftoken: ' , csrftoken);
@@ -186,6 +187,7 @@
             },
             success: function(response) {
                 console.log('response ---> ', response);
+                window.location.href = order_complete + '?order_no='+response.order_number+'&trans_id='+response.transaction_id
             }
         })
     }

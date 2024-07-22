@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import simplejson as json
 from django.shortcuts import redirect, render
 
@@ -121,8 +121,16 @@ def payments(request):
         send_notification(mail_subject, mail_template, context)
 
         # clear the cart if the payment is success
-        cart_items.delete()
+        # cart_items.delete()
 
         # return back to ajax with the status success or failure
-        return HttpResponse ('Success')
+        response = {
+            'order_number' :order_number,
+            'transaction_id': transaction_id,
+        }
+        return JsonResponse (response)
     return HttpResponse('Payments View')
+
+@login_required(login_url='login')
+def order_complete(request):
+    return render(request, 'orders/order_complete.html')
