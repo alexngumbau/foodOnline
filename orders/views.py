@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from marketplace.context_processors import get_cart_amounts
 from marketplace.models import Cart
 from orders.forms import OrderForm
-from orders.models import Order, Payment
+from orders.models import Order, OrderedFood, Payment
 from orders.utils import generate_order_number
 
 # Create your views here.
@@ -79,6 +79,18 @@ def payments(request):
         order.save()
     
         #  move the cart items to ordered food model
+        cart_items = Cart.objects.filter(user = request.user)
+        for item in cart_items:
+            ordered_food = OrderedFood()
+            ordered_food.order = order
+            ordered_food.payment = payment
+            ordered_food.user = request.user
+            ordered_food.fooditem = item.fooditem
+            ordered_food.quantity = item.quantity
+            ordered_food.price = item.fooditem.price
+            ordered_food.amount = item.fooditem.price * item.quantity # total amount
+            ordered_food.save()
+        return HttpResponse('Saved ordered food!!')
 
         #  send order confirmation email to the customer
 
