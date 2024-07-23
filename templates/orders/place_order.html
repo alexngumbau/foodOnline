@@ -98,8 +98,12 @@
                                                 </span>
                                             </li>
 
+                                            {% if order.payment.method == 'PayPal' %}
                                             <!-- PayPal Checkout button -->
                                             <div id="paypal-button-container"></div>  
+                                            {% elif order.payment.method == 'Mpesa' %}
+                                            <button class="btn btn-danger w-100">Pay with Mpesa</button>
+                                            {% endif %}
                                              
                                         </ul>
                                     </div>
