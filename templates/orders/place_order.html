@@ -9,7 +9,7 @@
         <div class="container">
             <div class="row">
                 
-                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
                     <div class="tabs-holder horizontal">
                         <ul class="stickynav-tabs nav nav-tabs">
                             <li class="active"><a data-toggle="tab" href="#home"><i class="icon- icon-shopping-cart"></i>Review Your Billing Address</a></li>
@@ -46,7 +46,7 @@
                 </div>
 
                 <!-- Your Order Section -->
-                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
                     <div class="tabs-holder horizontal">
                         <ul class="stickynav-tabs nav nav-tabs">
                             <li class="active"><a data-toggle="tab" href="#home"><i class="icon- icon-room_service"></i>Your Order</a></li>
@@ -62,7 +62,7 @@
                                                 {% for item in cart_items %}
                                                 <tr>
                                                     <td><img src="{{ item.fooditem.image.url }}" width="40"  alt="Food Image"></td>
-                                                    <td><b>{{ item.fooditem }}</b></td>
+                                                    <td><b>{{item.fooditem}}</b></td>
                                                     <td> {{ item.quantity }}</td>
                                                     <td> ${{ item.fooditem.price }}</td>
                                                 </tr>
@@ -98,10 +98,10 @@
                                                 </span>
                                             </li>
 
-                                            {% if order.payment.method == 'PayPal' %}
+                                            {% if order.payment_method == 'PayPal' %}
                                             <!-- PayPal Checkout button -->
                                             <div id="paypal-button-container"></div>  
-                                            {% elif order.payment.method == 'Mpesa' %}
+                                            {% elif order.payment_method == 'Mpesa' %}
                                             <button class="btn btn-danger w-100">Pay with Mpesa</button>
                                             {% endif %}
                                              
