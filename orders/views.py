@@ -1,12 +1,14 @@
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 import simplejson as json
 from django.shortcuts import redirect, render
 
+from foodOnline_main import settings
 from marketplace.context_processors import get_cart_amounts
 from marketplace.models import Cart
 from orders.forms import OrderForm
 from orders.models import Order, OrderedFood, Payment
-from orders.utils import generate_order_number
+from orders.utils import generate_order_number, get_mpesa_token, initiate_stk_push
 
 from accounts.utils import send_notification
 from django.contrib.auth.decorators import login_required
@@ -47,6 +49,22 @@ def place_order(request):
             order.save() # Order id/pk is generated
             order.order_number = generate_order_number(order.id)
             order.save()
+
+
+            if order.payment_method == 'Mpesa':
+                token = get_mpesa_token(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET)
+                callback_url = request.build_absolute_uri(reverse('payments'))
+                print('Generated Callback URL:', callback_url)
+                response = initiate_stk_push(
+                    token,
+                    order.phone,
+                    grand_total,
+                    order.order_number,
+                    'Order Payment',
+                    callback_url
+                )
+                # if response.get('ResponseCode') == '0':
+                #     # STK Push initiated successfully
             context = {
                 'order' : order,
                 'cart_items': cart_items,
