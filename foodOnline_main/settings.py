@@ -27,7 +27,18 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '079a-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
+    # You can also add other domains if necessary
+]
+
+# settings.py
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://079a-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
+]
 
 
 # Application definition

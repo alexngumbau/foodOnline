@@ -1,18 +1,25 @@
+import base64
+import datetime
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.views import View
+import pytz
+import requests
 import simplejson as json
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from foodOnline_main import settings
 from marketplace.context_processors import get_cart_amounts
 from marketplace.models import Cart
 from orders.forms import OrderForm
 from orders.models import Order, OrderedFood, Payment
-from orders.utils import generate_order_number, get_mpesa_token, initiate_stk_push
+from orders.utils import generate_order_number, get_mpesa_token
 
 from accounts.utils import send_notification
 from django.contrib.auth.decorators import login_required
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from requests.auth import HTTPBasicAuth
 # Create your views here.
 
 
@@ -51,18 +58,19 @@ def place_order(request):
             order.save()
 
 
-            if order.payment_method == 'Mpesa':
-                token = get_mpesa_token(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET)
-                callback_url = request.build_absolute_uri(reverse('payments'))
-                print('Generated Callback URL:', callback_url)
-                response = initiate_stk_push(
-                    token,
-                    order.phone,
-                    grand_total,
-                    order.order_number,
-                    'Order Payment',
-                    callback_url
-                )
+            # if order.payment_method == 'Mpesa':
+            #     token = get_mpesa_token(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET)
+            #     print('THIS IS THE TOKEN', token)
+            #     callback_url = 'https://d48c-102-213-49-41.ngrok-free.app/mpesa_response/'
+            #     print('Generated Callback URL:', callback_url)
+            #     response = initiate_stk_push(
+            #         token,
+            #         order.phone,
+            #         grand_total,
+            #         order.order_number,
+            #         'Order Payment',
+            #         callback_url
+            #     )
                 # if response.get('ResponseCode') == '0':
                 #     # STK Push initiated successfully
             context = {
@@ -169,3 +177,126 @@ def order_complete(request):
         return render(request, 'orders/order_complete.html', context)
     except:
         return redirect ('home')
+    
+
+# @csrf_exempt  # Disable CSRF protection for this view
+# def payments_callback(request):
+#     if request.method == 'POST':
+#         # Process the callback data here
+#         order_number = request.POST.get('order_number')
+#         transaction_id = request.POST.get('transaction_id')
+#         payment_method = request.POST.get('payment_method')
+#         status = request.POST.get('status')
+
+#         # Handle the payment logic (update order status, etc.)
+#         # ...
+
+#         return JsonResponse({'status': 'success'})
+#     return JsonResponse({'status': 'failed'}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MpesaCallbackView(View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body.decode('utf-8'))
+        result_code = data['Body']['stkCallback']['ResultCode']
+        result_desc = data['Body']['stkCallback']['ResultDesc']
+        merchant_request_id = data['Body']['stkCallback']['MerchantRequestID']
+        checkout_request_id = data['Body']['stkCallback']['CheckoutRequestID']
+        amount = data['Body']['stkCallback']['CallbackMetadata']['Item'][0]['Value']
+        mpesa_receipt_number = data['Body']['stkCallback']['CallbackMetadata']['Item'][1]['Value']
+        transaction_date = data['Body']['stkCallback']['CallbackMetadata']['Item'][3]['Value']
+        phone_number = data['Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value']
+
+        # Process the callback data here
+        # e.g., save to database, update order status, etc.
+        print(
+            f'result_code: {result_code}, '
+            f'result_desc: {result_desc}, '
+            f'merchant_request_id: {merchant_request_id}, '
+            f'checkout_request_id: {checkout_request_id}, '
+            f'amount: {amount}, '
+            f'mpesa_receipt_number: {mpesa_receipt_number}, '
+            f'transaction_date: {transaction_date}, '
+            f'phone_number: {phone_number}'
+        )
+
+        return JsonResponse({"status": "ok"})
+    
+
+
+@login_required(login_url='login')
+def initiate_stk_push(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        order_number = request.POST.get('order_number')
+        phone_number = request.POST.get('phone_number')
+        
+        formatted_phone_number = format_phone_number(phone_number)
+        print('Formatted Phone Number:', formatted_phone_number)
+
+        order = get_object_or_404(Order, order_number=order_number, user=request.user)
+        amount = int(order.total)
+
+        # Generate the password
+        shortcode = settings.MPESA_SHORTCODE
+        passkey = settings.MPESA_PASSKEY
+        nairobi_tz = pytz.timezone('Africa/Nairobi')
+        timestamp = datetime.datetime.now(nairobi_tz).strftime('%Y%m%d%H%M%S')
+        
+        data_to_encode = shortcode + passkey + timestamp
+        password = base64.b64encode(data_to_encode.encode()).decode('utf-8')
+
+        api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        
+        callback_url = "https://079a-102-213-49-40.ngrok-free.app/mpesa/callback/"
+        print('Callback URL:', callback_url)
+
+        # Get the access token
+        access_token = get_mpesa_token(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET)
+        print('Access Token:', access_token)
+        
+        # Make the STK push request
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+
+        payload = {
+            "BusinessShortCode": shortcode,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": amount,
+            "PartyA": formatted_phone_number,
+            "PartyB": shortcode,
+            "PhoneNumber": formatted_phone_number,
+            "CallBackURL": callback_url,
+            "AccountReference": order_number,
+            "TransactionDesc": 'Payment for order ' + order_number,
+        }
+
+        print('Payload:', payload)  
+
+        response = requests.post(
+            api_url,
+            json=payload,
+            headers=headers
+        )
+
+        response_data = response.json()
+        print('Response Data:', response_data)
+
+        if response.status_code == 200:
+            return JsonResponse(response_data)
+        else:
+            return JsonResponse({'error': 'Failed to initiate STK Push', 'details': response_data}, status=response.status_code)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def format_phone_number(phone_number):
+    if phone_number.startswith('07'):
+        return '254' + phone_number[1:]
+    elif phone_number.startswith('254'):
+        return phone_number
+    else:
+        raise ValueError("Invalid phone number format")
