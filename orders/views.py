@@ -57,22 +57,6 @@ def place_order(request):
             order.order_number = generate_order_number(order.id)
             order.save()
 
-
-            # if order.payment_method == 'Mpesa':
-            #     token = get_mpesa_token(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET)
-            #     print('THIS IS THE TOKEN', token)
-            #     callback_url = 'https://d48c-102-213-49-41.ngrok-free.app/mpesa_response/'
-            #     print('Generated Callback URL:', callback_url)
-            #     response = initiate_stk_push(
-            #         token,
-            #         order.phone,
-            #         grand_total,
-            #         order.order_number,
-            #         'Order Payment',
-            #         callback_url
-            #     )
-                # if response.get('ResponseCode') == '0':
-                #     # STK Push initiated successfully
             context = {
                 'order' : order,
                 'cart_items': cart_items,
@@ -177,22 +161,6 @@ def order_complete(request):
         return render(request, 'orders/order_complete.html', context)
     except:
         return redirect ('home')
-    
-
-# @csrf_exempt  # Disable CSRF protection for this view
-# def payments_callback(request):
-#     if request.method == 'POST':
-#         # Process the callback data here
-#         order_number = request.POST.get('order_number')
-#         transaction_id = request.POST.get('transaction_id')
-#         payment_method = request.POST.get('payment_method')
-#         status = request.POST.get('status')
-
-#         # Handle the payment logic (update order status, etc.)
-#         # ...
-
-#         return JsonResponse({'status': 'success'})
-#     return JsonResponse({'status': 'failed'}, status=400)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -203,13 +171,25 @@ class MpesaCallbackView(View):
         result_desc = data['Body']['stkCallback']['ResultDesc']
         merchant_request_id = data['Body']['stkCallback']['MerchantRequestID']
         checkout_request_id = data['Body']['stkCallback']['CheckoutRequestID']
-        amount = data['Body']['stkCallback']['CallbackMetadata']['Item'][0]['Value']
-        mpesa_receipt_number = data['Body']['stkCallback']['CallbackMetadata']['Item'][1]['Value']
-        transaction_date = data['Body']['stkCallback']['CallbackMetadata']['Item'][3]['Value']
-        phone_number = data['Body']['stkCallback']['CallbackMetadata']['Item'][4]['Value']
+        callback_metadata = data['Body']['stkCallback'].get('CallbackMetadata', {}).get('Item', [])
+        
+        # Initialize variables
+        amount = 0
+        mpesa_receipt_number = ''
+        transaction_date = ''
+        phone_number = ''
+        
+        for item in callback_metadata:
+            if item['Name'] == 'Amount':
+                amount = item['Value']
+            elif item['Name'] == 'MpesaReceiptNumber':
+                mpesa_receipt_number = item['Value']
+            elif item['Name'] == 'TransactionDate':
+                transaction_date = item['Value']
+            elif item['Name'] == 'PhoneNumber':
+                phone_number = item['Value']
 
-        # Process the callback data here
-        # e.g., save to database, update order status, etc.
+        # Debug information
         print(
             f'result_code: {result_code}, '
             f'result_desc: {result_desc}, '
@@ -220,6 +200,63 @@ class MpesaCallbackView(View):
             f'transaction_date: {transaction_date}, '
             f'phone_number: {phone_number}'
         )
+
+        if result_code == 0:
+            # Successful transaction
+            order = get_object_or_404(Order, order_number=merchant_request_id)
+            payment = Payment(
+                user=order.user,
+                transaction_id=mpesa_receipt_number,
+                payment_method='Mpesa',
+                amount=amount,
+                status='Success'
+            )
+            payment.save()
+
+            # Update order
+            order.payment = payment
+            order.is_ordered = True
+            order.save()
+
+            # Move cart items to OrderedFood model
+            cart_items = Cart.objects.filter(user=order.user)
+            for item in cart_items:
+                OrderedFood.objects.create(
+                    order=order,
+                    payment=payment,
+                    user=order.user,
+                    fooditem=item.fooditem,
+                    quantity=item.quantity,
+                    price=item.fooditem.price,
+                    amount=item.fooditem.price * item.quantity
+                )
+
+            # Send order confirmation email to customer
+            mail_subject = 'Thank you for ordering with us.'
+            mail_template = 'orders/order_confirmation_email.html'
+            context = {
+                'user': order.user,
+                'order': order,
+                'to_email': order.email,
+            }
+            send_notification(mail_subject, mail_template, context)
+
+            # Send new order received email to vendor
+            mail_subject = 'You have received a new order.'
+            mail_template = 'orders/new_order_received.html'
+            to_emails = []
+            for item in cart_items:
+                if item.fooditem.vendor.user.email not in to_emails:
+                    to_emails.append(item.fooditem.vendor.user.email)
+
+            context = {
+                'order': order,
+                'to_email': to_emails,
+            }
+            send_notification(mail_subject, mail_template, context)
+
+            # Clear the cart
+            cart_items.delete()
 
         return JsonResponse({"status": "ok"})
     

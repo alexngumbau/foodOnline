@@ -217,6 +217,7 @@
             },
             success: function(response) {
                 if(response.ResponseCode === "0") {
+                    console.log("This is the response code after the mpesa transaction", response);
                     alert("STK Push sent successfully! Please complete the paymnet on your phone.");
                 } else {
                     alert("Failed to initiate STK Push: " + response.errorMessage);
