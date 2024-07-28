@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from requests.auth import HTTPBasicAuth
+import logging
 # Create your views here.
 
 
@@ -162,104 +163,109 @@ def order_complete(request):
     except:
         return redirect ('home')
 
+logger = logging.getLogger(__name__)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MpesaCallbackView(View):
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body.decode('utf-8'))
-        result_code = data['Body']['stkCallback']['ResultCode']
-        result_desc = data['Body']['stkCallback']['ResultDesc']
-        merchant_request_id = data['Body']['stkCallback']['MerchantRequestID']
-        checkout_request_id = data['Body']['stkCallback']['CheckoutRequestID']
-        callback_metadata = data['Body']['stkCallback'].get('CallbackMetadata', {}).get('Item', [])
-        
-        # Initialize variables
-        amount = 0
-        mpesa_receipt_number = ''
-        transaction_date = ''
-        phone_number = ''
-        
-        for item in callback_metadata:
-            if item['Name'] == 'Amount':
-                amount = item['Value']
-            elif item['Name'] == 'MpesaReceiptNumber':
-                mpesa_receipt_number = item['Value']
-            elif item['Name'] == 'TransactionDate':
-                transaction_date = item['Value']
-            elif item['Name'] == 'PhoneNumber':
-                phone_number = item['Value']
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            result_code = data['Body']['stkCallback']['ResultCode']
+            result_desc = data['Body']['stkCallback']['ResultDesc']
+            merchant_request_id = data['Body']['stkCallback']['MerchantRequestID']
+            checkout_request_id = data['Body']['stkCallback']['CheckoutRequestID']
+            callback_metadata = data['Body']['stkCallback'].get('CallbackMetadata', {}).get('Item', [])
 
-        # Debug information
-        print(
-            f'result_code: {result_code}, '
-            f'result_desc: {result_desc}, '
-            f'merchant_request_id: {merchant_request_id}, '
-            f'checkout_request_id: {checkout_request_id}, '
-            f'amount: {amount}, '
-            f'mpesa_receipt_number: {mpesa_receipt_number}, '
-            f'transaction_date: {transaction_date}, '
-            f'phone_number: {phone_number}'
-        )
+            # Initialize variables
+            amount = 0
+            mpesa_receipt_number = ''
+            transaction_date = ''
+            phone_number = ''
+            
+            for item in callback_metadata:
+                if item['Name'] == 'Amount':
+                    amount = item['Value']
+                elif item['Name'] == 'MpesaReceiptNumber':
+                    mpesa_receipt_number = item['Value']
+                elif item['Name'] == 'TransactionDate':
+                    transaction_date = item['Value']
+                elif item['Name'] == 'PhoneNumber':
+                    phone_number = item['Value']
 
-        if result_code == 0:
-            # Successful transaction
-            order = get_object_or_404(Order, order_number=merchant_request_id)
-            payment = Payment(
-                user=order.user,
-                transaction_id=mpesa_receipt_number,
-                payment_method='Mpesa',
-                amount=amount,
-                status='Success'
+            # Log the information
+            logger.info(
+                f'result_code: {result_code}, '
+                f'result_desc: {result_desc}, '
+                f'merchant_request_id: {merchant_request_id}, '
+                f'checkout_request_id: {checkout_request_id}, '
+                f'amount: {amount}, '
+                f'mpesa_receipt_number: {mpesa_receipt_number}, '
+                f'transaction_date: {transaction_date}, '
+                f'phone_number: {phone_number}'
             )
-            payment.save()
 
-            # Update order
-            order.payment = payment
-            order.is_ordered = True
-            order.save()
-
-            # Move cart items to OrderedFood model
-            cart_items = Cart.objects.filter(user=order.user)
-            for item in cart_items:
-                OrderedFood.objects.create(
-                    order=order,
-                    payment=payment,
+            if result_code == 0:
+                # Successful transaction
+                order = get_object_or_404(Order, order_number=merchant_request_id)
+                payment = Payment(
                     user=order.user,
-                    fooditem=item.fooditem,
-                    quantity=item.quantity,
-                    price=item.fooditem.price,
-                    amount=item.fooditem.price * item.quantity
+                    transaction_id=mpesa_receipt_number,
+                    payment_method='Mpesa',
+                    amount=amount,
+                    status='Success'
                 )
+                payment.save()
 
-            # Send order confirmation email to customer
-            mail_subject = 'Thank you for ordering with us.'
-            mail_template = 'orders/order_confirmation_email.html'
-            context = {
-                'user': order.user,
-                'order': order,
-                'to_email': order.email,
-            }
-            send_notification(mail_subject, mail_template, context)
+                # Update order
+                order.payment = payment
+                order.is_ordered = True
+                order.save()
 
-            # Send new order received email to vendor
-            mail_subject = 'You have received a new order.'
-            mail_template = 'orders/new_order_received.html'
-            to_emails = []
-            for item in cart_items:
-                if item.fooditem.vendor.user.email not in to_emails:
-                    to_emails.append(item.fooditem.vendor.user.email)
+                # Move cart items to OrderedFood model
+                cart_items = Cart.objects.filter(user=order.user)
+                for item in cart_items:
+                    OrderedFood.objects.create(
+                        order=order,
+                        payment=payment,
+                        user=order.user,
+                        fooditem=item.fooditem,
+                        quantity=item.quantity,
+                        price=item.fooditem.price,
+                        amount=item.fooditem.price * item.quantity
+                    )
 
-            context = {
-                'order': order,
-                'to_email': to_emails,
-            }
-            send_notification(mail_subject, mail_template, context)
+                # Send order confirmation email to customer
+                mail_subject = 'Thank you for ordering with us.'
+                mail_template = 'orders/order_confirmation_email.html'
+                context = {
+                    'user': order.user,
+                    'order': order,
+                    'to_email': order.email,
+                }
+                send_notification(mail_subject, mail_template, context)
 
-            # Clear the cart
-            cart_items.delete()
+                # Send new order received email to vendor
+                mail_subject = 'You have received a new order.'
+                mail_template = 'orders/new_order_received.html'
+                to_emails = []
+                for item in cart_items:
+                    if item.fooditem.vendor.user.email not in to_emails:
+                        to_emails.append(item.fooditem.vendor.user.email)
 
-        return JsonResponse({"status": "ok"})
-    
+                context = {
+                    'order': order,
+                    'to_email': to_emails,
+                }
+                send_notification(mail_subject, mail_template, context)
+
+                # Clear the cart
+                cart_items.delete()
+
+            return JsonResponse({"status": "ok"})
+        except Exception as e:
+            logger.error(f"Error processing Mpesa callback: {e}")
+            return JsonResponse({"status": "error"}, status=500)    
 
 
 @login_required(login_url='login')
@@ -285,7 +291,7 @@ def initiate_stk_push(request):
 
         api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
         
-        callback_url = "https://079a-102-213-49-40.ngrok-free.app/mpesa/callback/"
+        callback_url = 'https://f77c-102-213-49-41.ngrok-free.app/mpesa/callback/'
         print('Callback URL:', callback_url)
 
         # Get the access token

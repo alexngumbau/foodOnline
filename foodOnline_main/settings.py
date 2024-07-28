@@ -30,14 +30,14 @@ DEBUG = config('DEBUG', cast=bool)
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '079a-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
+    'f77c-102-213-49-41.ngrok-free.app',  # Add your ngrok URL here
     # You can also add other domains if necessary
 ]
 
 # settings.py
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://079a-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
+    'https://f77c-102-213-49-41.ngrok-free.app',  # Add your ngrok URL here
 ]
 
 
@@ -194,4 +194,26 @@ MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY')
 MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET')
 MPESA_SHORTCODE = config('MPESA_SHORTCODE')
 MPESA_PASSKEY = config('MPESA_PASSKEY')
-MPESA_CALLBACK_URL = config('MPESA_PASSKEY')
+MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL')
+
+
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

@@ -182,6 +182,36 @@
         }
     }).render('#paypal-button-container');
 
+
+
+    // Handle Mpesa STK push
+    document.querySelector('.btn-danger.w-100').addEventListener('click', function() {
+        var phone_number = '{{order.phone}}'
+        var csrtoken = getCookie('csrftoken');
+
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'initiate_stk_push' %}",
+            data: {
+                'phone_number': phone_number,
+                'order_number': order_number,
+                'csrfmiddlewaretoken' : csrftoken,
+            },
+            success: function(response) {
+                console.log("This is the response code after the mpesa transaction", response);
+                if(response.ResponseCode === "0") {                    
+                    alert("STK Push sent successfully! Please complete the paymnet on your phone.");
+                } else {
+                    alert("Failed to initiate STK Push: " + response.errorMessage);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log("ERRRRRRRRRRRRRRRRRRROOOOOR", xhr.responseText);
+                alert("An error occurred while initiating the STK Push.")
+            }
+        })
+    }) 
+
     // Send the data to payments view to store in the database
     function sendTransaction(transaction_id, payment_method, status){
         $.ajax({
@@ -202,33 +232,6 @@
     }
 
 
-    // Handle Mpesa STK push
-    document.querySelector('.btn-danger.w-100').addEventListener('click', function() {
-        var phone_number = '{{order.phone}}'
-        var csrtoken = getCookie('csrftoken');
-
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'initiate_stk_push' %}",
-            data: {
-                'phone_number': phone_number,
-                'order_number': order_number,
-                'csrfmiddlewaretoken' : csrftoken,
-            },
-            success: function(response) {
-                if(response.ResponseCode === "0") {
-                    console.log("This is the response code after the mpesa transaction", response);
-                    alert("STK Push sent successfully! Please complete the paymnet on your phone.");
-                } else {
-                    alert("Failed to initiate STK Push: " + response.errorMessage);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log("ERRRRRRRRRRRRRRRRRRROOOOOR", xhr.responseText);
-                alert("An error occurred while initiating the STK Push.")
-            }
-        })
-    }) 
 
 
 </script>
