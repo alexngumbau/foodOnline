@@ -36,5 +36,8 @@ urlpatterns = [
 
     # ORDERS
     path('orders/', include('orders.urls')),
+
+    # CALLBACKURL-MPESA
+    path('callbackurl/', views.callbackurl, name='callbackurl'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
