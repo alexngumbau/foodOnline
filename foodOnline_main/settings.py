@@ -30,14 +30,14 @@ DEBUG = config('DEBUG', cast=bool)
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'f77c-102-213-49-41.ngrok-free.app',  # Add your ngrok URL here
+    '270d-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
     # You can also add other domains if necessary
 ]
 
 # settings.py
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://f77c-102-213-49-41.ngrok-free.app',  # Add your ngrok URL here
+    'https://270d-102-213-49-40.ngrok-free.app',  # Add your ngrok URL here
 ]
 
 
