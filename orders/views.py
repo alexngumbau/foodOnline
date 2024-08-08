@@ -192,7 +192,7 @@ def initiate_stk_push(request):
 
         api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
         
-        callback_url = "https://270d-102-213-49-40.ngrok-free.app/callbackurl"
+        callback_url = "https://9eab-169-150-218-77.ngrok-free.app/callbackurl"
         print('Callback URL:', callback_url)
 
         # Get the access token
@@ -246,3 +246,71 @@ def format_phone_number(phone_number):
         raise ValueError("Invalid phone number format")
 
 
+@csrf_exempt
+@require_POST
+def callbackurl(request):
+    try:
+        # Parse the JSON data posted to the callback URL
+        mpesa_response = json.loads(request.body)
+
+        # Log the response to a file
+        log_file = "M_PESAConfirmationResponse.txt"
+        with open(log_file, "a") as log:
+            log.write(json.dumps(mpesa_response) + "\n")
+
+        print(mpesa_response)
+
+        # Extract the ResultCode
+        result_code = mpesa_response['Body']['stkCallback']['ResultCode']
+        #
+        # if result_code == 0:
+        #     # Extract additional information from the CallbackMetadata
+        #     callback_metadata = mpesa_response['Body']['stkCallback']['CallbackMetadata']['Item']
+        #
+        #     # Initialize variables to store the extracted data
+        #     mpesa_receipt_number = transaction_date = phone_number = amount = None
+        #
+        #     # Iterate through the metadata to extract the required fields
+        #     for item in callback_metadata:
+        #         if item['Name'] == 'MpesaReceiptNumber':
+        #             mpesa_receipt_number = item['Value']
+        #         elif item['Name'] == 'TransactionDate':
+        #             transaction_date = item['Value']
+        #         elif item['Name'] == 'PhoneNumber':
+        #             phone_number = item['Value']
+        #         elif item['Name'] == 'Amount':
+        #             amount = item['Value']
+        #
+        #     # Print the extracted values
+        #     print("MpesaReceiptNumber:", mpesa_receipt_number)
+        #     print("TransactionDate:", transaction_date)
+        #     print("PhoneNumber:", phone_number)
+        #     print("Amount:", amount)
+        #
+        #     # Return the success response
+        #     response = {
+        #         "ResultCode": 0,
+        #         "ResultDesc": "Confirmation Received Successfully"
+        #     }
+        #     print(response)
+
+        #     return JsonResponse({"message": "Response received"}, status=200)
+        # else:
+        #     # Return a response indicating that the transaction failed
+        #     response = {
+        #         "ResultCode": result_code,
+        #         "ResultDesc": "Transaction failed"
+        #     }
+        #     print(response)
+        #     return JsonResponse(response, status=400)
+        return JsonResponse({"message": "Response received"}, status=200)
+
+    except json.JSONDecodeError:
+        print("Invalid JSON data")
+        return JsonResponse({"message": "Invalid JSON data"}, status=400)
+    except KeyError as e:
+        print(f"Missing key in JSON data: {e}")
+        return JsonResponse({"message": f"Missing key in JSON data: {e}"}, status=400)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+ 
