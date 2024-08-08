@@ -1,10 +1,11 @@
+import simplejson as json
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from accounts.forms import UserInfoForm, UserProfileForm
 from accounts.models import UserProfile
-from orders.models import Order
+from orders.models import Order, OrderedFood
 
 # Create your views here.
 
@@ -46,4 +47,19 @@ def my_orders(request):
 
 
 def order_detail(request, order_number):
-    return render(request, 'customers/order_detail.html')
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_food= OrderedFood.objects.filter(order= order)
+        subtotal = 0
+        for item in ordered_food:
+            subtotal +=  (item.price * item.quantity) 
+        tax_data = json.loads(order.tax_data)
+        context = {
+            'order': order,
+            'ordered_food': ordered_food,
+            'subtotal': subtotal,
+            'tax_data': tax_data,
+        }
+        return render(request, 'customers/order_detail.html', context)
+    except:
+        return redirect('customer')
