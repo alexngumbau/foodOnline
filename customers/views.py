@@ -6,6 +6,7 @@ from django.contrib import messages
 from accounts.forms import UserInfoForm, UserProfileForm
 from accounts.models import UserProfile
 from orders.models import Order, OrderedFood
+from django.core.paginator import Paginator
 
 # Create your views here.
 
@@ -39,9 +40,18 @@ def cprofile(request):
 
 
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_ordered= True).order_by('-created_at')
+    orders_list = Order.objects.filter(user=request.user, is_ordered= True).order_by('-created_at')
+    # Pagination
+    per_page = request.GET.get('per_page', 10)
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(orders_list, per_page)
+    orders = paginator.get_page(page_number)
+
     context = {
-        'orders' : orders
+        'orders' : orders,
+        'order_count': orders_list.count(),
+        'per_page_options': [5,10,20,50],
+        'selected_per_page': per_page
     }
     return render(request, 'customers/my_orders.html', context)
 

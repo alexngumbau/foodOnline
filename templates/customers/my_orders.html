@@ -35,21 +35,47 @@
                                                   </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {% for order in orders %}
-                                                  <tr>
-                                                    <td><b><a href="{% url 'order_detail' order.order_number %}" class="text-dark">{{ order.order_number }}</a></b></td>
-                                                    <td>{{ order.name }}</td>
-                                                    <td>${{ order.total }}</td>
-                                                    <td>{{ order.status }}</td>
-                                                    <td>{{ order.created_at }}</td>
-                                                    <td><a href="{% url 'order_detail' order.order_number %}" class="bt btn-danger">Details</a></td>
-                                                  </tr>
-                                                  {% endfor %}
+                                                    {% if orders %}
+                                                        {% for order in orders %}
+                                                            <tr>
+                                                                <td><b><a href="{% url 'order_detail' order.order_number %}" class="text-dark">{{ order.order_number }}</a></b></td>
+                                                                <td>{{ order.name }}</td>
+                                                                <td>${{ order.total }}</td>
+                                                                <td>{{ order.status }}</td>
+                                                                <td>{{ order.created_at }}</td>
+                                                                <td><a href="{% url 'order_detail' order.order_number %}" class="bt btn-danger">Details</a></td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="6" class="text-center">No orders found</td>
+                                                        </tr>
+                                                    {% endif %}
                                                 </tbody>
                                               </table>
-
                                         </div>												
                                     </div>
+
+                                    <!-- Pagination Controls -->
+                                    <div class="pagination">
+                                        <span class="step-links">
+                                            {% if orders.has_previous %}
+                                                <a href="?page=1&per_page={{ selected_per_page }}">&laquo; first</a>
+                                                <a href="?page={{ orders.previous_page_number }}&per_page={{ selected_per_page }}">previous</a>
+                                            {% endif %}
+
+                                            <span class="current">
+                                                Page {{ orders.number }} of {{ orders.paginator.num_pages }}.
+                                            </span>
+
+                                            {% if orders.has_next %}
+                                                <a href="?page={{ orders.next_page_number }}&per_page={{ selected_per_page }}">next</a>
+                                                <a href="?page={{ orders.paginator.num_pages }}&per_page={{ selected_per_page }}">last &raquo;</a>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+
+
                                 </div>
                             </div>
                             
