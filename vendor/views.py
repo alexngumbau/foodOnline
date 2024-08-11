@@ -6,6 +6,7 @@ from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from menu.forms import CategoryForm, FoodItemForm
 from menu.models import Category, FoodItem
+from orders.models import Order, OrderedFood
 from vendor.forms import OpeningHourForm, VendorForm
 from vendor.models import OpeningHour, Vendor
 
@@ -255,3 +256,16 @@ def remove_opening_hours(request, pk=None):
                 'id': pk
             })
 
+def order_detail(request, order_number):
+    try:
+        order = Order.objects.get(order_number = order_number, is_ordered = True)
+        ordered_food = OrderedFood.objects.filter(order =  order, fooditem__vendor =  get_vendor(request))
+        
+        context =  {
+            'order' : order,
+            'ordered_food': ordered_food,
+        }
+
+        return render(request, 'vendor/order_detail.html', context)
+    except: 
+        return redirect('vendor')
