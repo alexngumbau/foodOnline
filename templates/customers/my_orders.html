@@ -23,7 +23,7 @@
                                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                     <div class="user-orders-list">
                                         <div class="responsive-table">
-                                            <table class="table table-hover">
+                                            <table class="table table-hover" id="myOrdersTable">
                                                 <thead>
                                                   <tr>
                                                     <th scope="col">Order #</th>
@@ -54,25 +54,6 @@
                                                 </tbody>
                                               </table>
                                         </div>												
-                                    </div>
-
-                                    <!-- Pagination Controls -->
-                                    <div class="pagination">
-                                        <span class="step-links">
-                                            {% if orders.has_previous %}
-                                                <a href="?page=1&per_page={{ selected_per_page }}">&laquo; first</a>
-                                                <a href="?page={{ orders.previous_page_number }}&per_page={{ selected_per_page }}">previous</a>
-                                            {% endif %}
-
-                                            <span class="current">
-                                                Page {{ orders.number }} of {{ orders.paginator.num_pages }}.
-                                            </span>
-
-                                            {% if orders.has_next %}
-                                                <a href="?page={{ orders.next_page_number }}&per_page={{ selected_per_page }}">next</a>
-                                                <a href="?page={{ orders.paginator.num_pages }}&per_page={{ selected_per_page }}">last &raquo;</a>
-                                            {% endif %}
-                                        </span>
                                     </div>
 
 
