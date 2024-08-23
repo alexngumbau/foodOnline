@@ -96,8 +96,6 @@ class Order(models.Model):
             'grand_total' : grand_total,
         }
 
-        print("CONTEXT", context)
-
         return context
     
     def __str__(self):
