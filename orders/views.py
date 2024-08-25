@@ -14,7 +14,7 @@ from marketplace.models import Cart, Tax
 from menu.models import FoodItem
 from orders.forms import OrderForm
 from orders.models import Order, OrderedFood, Payment
-from orders.utils import generate_order_number, get_mpesa_token
+from orders.utils import generate_order_number, get_mpesa_token, order_total_by_vendor
 
 from accounts.utils import send_notification
 from django.contrib.auth.decorators import login_required
@@ -173,11 +173,19 @@ def payments(request):
             if i.fooditem.vendor.user.email not in to_emails:
                 to_emails.append(i.fooditem.vendor.user.email)
 
-        context = {
-            'order': order,
-            'to_email': to_emails,
-        }
-        send_notification(mail_subject, mail_template, context)
+                ordered_food_to_vendor = OrderedFood.objects.filter(order =order, fooditem__vendor = i.fooditem.vendor)
+                
+                
+                context = {
+                    'order': order,
+                    'to_email': i.fooditem.vendor.user.email,
+                    'ordered_food_to_vendor' : ordered_food_to_vendor,
+                    'vendor_subtotal': order_total_by_vendor(order, i.fooditem.vendor.id)['subtotal'],
+                    'tax_data' : order_total_by_vendor(order, i.fooditem.vendor.id)['tax_dict'],
+                    'vendor_grand_total' : order_total_by_vendor(order, i.fooditem.vendor.id)['grand_total'],
+                    
+                }
+                send_notification(mail_subject, mail_template, context)
 
         # clear the cart if the payment is success
         # cart_items.delete()
