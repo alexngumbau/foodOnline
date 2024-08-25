@@ -73,5 +73,24 @@ table > tbody > tr > td {
         background-position: right !important;
     }
 
+    .user-dashboard {
+        width: 100% !important;
+    }
+
+    .menu-itam-holder .quantity {
+        right: 0 !important;
+        margin-top: -30px !important;
+    }
+
+    .table.opening_hours{
+        width: 100% !important;
+    }
+    .table td {
+        padding: 0.5rem !important;
+    }
+  }
+
+  table td, table th {
+    line-height: 1rem !important;
   }
 
