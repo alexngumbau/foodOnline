@@ -60,3 +60,18 @@ table > tbody > tr > td {
 }
 
 
+@media only screen and (max-width: 480px) {
+    a.get-start-btn {
+        display: block;
+        margin-top: 15px !important;
+        margin-left: 0 !important;
+    }
+    
+    .main-search-bar{
+        padding-top: 50px !important;
+        padding-bottom: 50px !important;
+        background-position: right !important;
+    }
+
+  }
+
